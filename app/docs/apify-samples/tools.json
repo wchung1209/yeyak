@@ -1,0 +1,235 @@
+{
+  "tools": [
+    {
+      "name": "login",
+      "description": "Log in to Resy. Required before booking. Usually auto-called with pre-configured credentials.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "search_restaurants",
+      "description": "Search Resy for restaurants with available time slots.\n\nArgs:\n    city: City name (e.g. \"New York\", \"London\", \"Athens\")\n    cuisine: Filter by cuisine type (e.g. \"Italian\", \"Japanese\")\n    query: Search query (restaurant name or keyword)\n    date: Date in YYYY-MM-DD format (defaults to today)\n    party_size: Number of guests (defaults to 2)\n    limit: Max restaurants to return (defaults to 10, max 25)\n    sort: Sort by \"relevance\" (default), \"rating\", \"slots\", or \"name\"\n\nReturns list of restaurants with available slots. Each slot has a token needed for booking.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string"
+          },
+          "cuisine": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "party_size": {
+            "default": 2,
+            "type": "integer"
+          },
+          "limit": {
+            "default": 10,
+            "type": "integer"
+          },
+          "sort": {
+            "default": "relevance",
+            "type": "string"
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "x-fastmcp-wrap-result": true
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "check_availability",
+      "description": "Check available time slots for a specific restaurant.\n\nArgs:\n    restaurant_url: Full Resy URL (e.g. https://resy.com/cities/new-york-ny/carbone)\n    date: Date in YYYY-MM-DD format (defaults to today)\n    party_size: Number of guests (defaults to 2)\n\nReturns restaurant details with available slots and config_tokens.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "restaurant_url": {
+            "type": "string"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "party_size": {
+            "default": 2,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "restaurant_url"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "book_reservation",
+      "description": "Book a time slot using config_token from search or availability results.\n\nThis will create a real reservation on your Resy account.\n\nArgs:\n    config_token: The token from a slot in search/availability results",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "config_token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "config_token"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "my_reservations",
+      "description": "List your current Resy reservations.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "x-fastmcp-wrap-result": true
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    },
+    {
+      "name": "cancel_reservation",
+      "description": "Cancel a reservation by its resy_token (from my_reservations or book_reservation results).\n\nArgs:\n    resy_token: The resy_token identifier for the reservation to cancel",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "resy_token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "resy_token"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "_meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      }
+    }
+  ]
+}

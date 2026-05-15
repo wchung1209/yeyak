@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background: theme(colors.cream);
+  color: theme(colors.ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Chat bubble scroll container gets momentum-scroll on iOS */
+.chat-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}

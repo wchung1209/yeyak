@@ -1,0 +1,14 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"success\":true,\"user_name\":\"Woojae Chung\",\"email\":\"jwj00999@gmail.com\"}"
+    }
+  ],
+  "structuredContent": {
+    "success": true,
+    "user_name": "Woojae Chung",
+    "email": "jwj00999@gmail.com"
+  },
+  "isError": false
+}

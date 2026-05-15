@@ -1,0 +1,58 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"id\":60029,\"name\":\"Le Gratin\",\"url\":\"https://resy.com/cities/new-york-ny/le-gratin\",\"neighborhood\":\"Lower Manhattan\",\"cuisine\":[\"French\"],\"priceRange\":2,\"rating\":4.63489,\"slots\":[{\"time\":\"2026-04-24 20:45:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/20:45:00/2/Dining Room\"},{\"time\":\"2026-04-24 21:00:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:00:00/2/Dining Room\"},{\"time\":\"2026-04-24 21:15:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:15:00/2/Dining Room\"},{\"time\":\"2026-04-24 21:30:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:30:00/2/Dining Room\"},{\"time\":\"2026-04-24 21:45:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:45:00/2/Dining Room\"},{\"time\":\"2026-04-24 22:00:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/22:00:00/2/Dining Room\"},{\"time\":\"2026-04-24 22:15:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/22:15:00/2/Dining Room\"}],\"slotCount\":7}"
+    }
+  ],
+  "structuredContent": {
+    "id": 60029,
+    "name": "Le Gratin",
+    "url": "https://resy.com/cities/new-york-ny/le-gratin",
+    "neighborhood": "Lower Manhattan",
+    "cuisine": [
+      "French"
+    ],
+    "priceRange": 2,
+    "rating": 4.63489,
+    "slots": [
+      {
+        "time": "2026-04-24 20:45:00",
+        "type": "Dining Room",
+        "token": "rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/20:45:00/2/Dining Room"
+      },
+      {
+        "time": "2026-04-24 21:00:00",
+        "type": "Dining Room",
+        "token": "rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:00:00/2/Dining Room"
+      },
+      {
+        "time": "2026-04-24 21:15:00",
+        "type": "Dining Room",
+        "token": "rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:15:00/2/Dining Room"
+      },
+      {
+        "time": "2026-04-24 21:30:00",
+        "type": "Dining Room",
+        "token": "rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:30:00/2/Dining Room"
+      },
+      {
+        "time": "2026-04-24 21:45:00",
+        "type": "Dining Room",
+        "token": "rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:45:00/2/Dining Room"
+      },
+      {
+        "time": "2026-04-24 22:00:00",
+        "type": "Dining Room",
+        "token": "rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/22:00:00/2/Dining Room"
+      },
+      {
+        "time": "2026-04-24 22:15:00",
+        "type": "Dining Room",
+        "token": "rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/22:15:00/2/Dining Room"
+      }
+    ],
+    "slotCount": 7
+  },
+  "isError": false
+}

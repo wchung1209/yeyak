@@ -1,0 +1,258 @@
+{
+  "_meta": {
+    "fastmcp": {
+      "wrap_result": true
+    }
+  },
+  "content": [
+    {
+      "type": "text",
+      "text": "[{\"id\":60029,\"name\":\"Le Gratin\",\"url\":\"https://resy.com/cities/new-york-ny/le-gratin\",\"neighborhood\":\"Lower Manhattan\",\"cuisine\":[\"French\"],\"priceRange\":2,\"rating\":4.63489,\"slots\":[{\"time\":\"2026-04-24 20:45:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/20:45:00/2/Dining Room\"},{\"time\":\"2026-04-24 21:00:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:00:00/2/Dining Room\"},{\"time\":\"2026-04-24 21:15:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:15:00/2/Dining Room\"},{\"time\":\"2026-04-24 21:30:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:30:00/2/Dining Room\"},{\"time\":\"2026-04-24 21:45:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:45:00/2/Dining Room\"},{\"time\":\"2026-04-24 22:00:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/22:00:00/2/Dining Room\"},{\"time\":\"2026-04-24 22:15:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/22:15:00/2/Dining Room\"}],\"slotCount\":7},{\"id\":40703,\"name\":\"The Bar Room at The Beekman\",\"url\":\"https://resy.com/cities/new-york-ny/the-bar-room-at-the-beekman\",\"neighborhood\":\"Financial District\",\"cuisine\":[\"American\"],\"priceRange\":2,\"rating\":4.45618,\"slots\":[{\"time\":\"2026-04-24 22:30:00\",\"type\":\"The Bar Room\",\"token\":\"rgs://resy/40703/1484236/2/2026-04-24/2026-04-24/22:30:00/2/The Bar Room\"},{\"time\":\"2026-04-24 22:45:00\",\"type\":\"The Bar Room\",\"token\":\"rgs://resy/40703/1484236/2/2026-04-24/2026-04-24/22:45:00/2/The Bar Room\"},{\"time\":\"2026-04-24 23:00:00\",\"type\":\"The Bar Room\",\"token\":\"rgs://resy/40703/1484236/2/2026-04-24/2026-04-24/23:00:00/2/The Bar Room\"},{\"time\":\"2026-04-24 23:15:00\",\"type\":\"The Bar Room\",\"token\":\"rgs://resy/40703/1484236/2/2026-04-24/2026-04-24/23:15:00/2/The Bar Room\"},{\"time\":\"2026-04-24 23:30:00\",\"type\":\"The Bar Room\",\"token\":\"rgs://resy/40703/1484236/2/2026-04-24/2026-04-24/23:30:00/2/The Bar Room\"},{\"time\":\"2026-04-24 23:45:00\",\"type\":\"The Bar Room\",\"token\":\"rgs://resy/40703/1484236/2/2026-04-24/2026-04-24/23:45:00/2/The Bar Room\"}],\"slotCount\":6},{\"id\":72993,\"name\":\"Artesano\",\"url\":\"https://resy.com/cities/new-york-ny/artesano\",\"neighborhood\":\"Tribeca\",\"cuisine\":[\"Peruvian\"],\"priceRange\":2,\"rating\":4.69339,\"slots\":[{\"time\":\"2026-04-24 20:45:00\",\"type\":\"Dining\",\"token\":\"rgs://resy/72993/2261622/2/2026-04-24/2026-04-24/20:45:00/2/Dining\"},{\"time\":\"2026-04-24 21:00:00\",\"type\":\"Dining\",\"token\":\"rgs://resy/72993/2261622/2/2026-04-24/2026-04-24/21:00:00/2/Dining\"},{\"time\":\"2026-04-24 21:15:00\",\"type\":\"Dining\",\"token\":\"rgs://resy/72993/2261622/2/2026-04-24/2026-04-24/21:15:00/2/Dining\"},{\"time\":\"2026-04-24 21:30:00\",\"type\":\"Dining\",\"token\":\"rgs://resy/72993/2261622/2/2026-04-24/2026-04-24/21:30:00/2/Dining\"},{\"time\":\"2026-04-24 21:45:00\",\"type\":\"Dining\",\"token\":\"rgs://resy/72993/2261622/2/2026-04-24/2026-04-24/21:45:00/2/Dining\"},{\"time\":\"2026-04-24 22:00:00\",\"type\":\"Dining\",\"token\":\"rgs://resy/72993/2261622/2/2026-04-24/2026-04-24/22:00:00/2/Dining\"}],\"slotCount\":6},{\"id\":83704,\"name\":\"Da Claudio\",\"url\":\"https://resy.com/cities/new-york-ny/da-claudio-ny\",\"neighborhood\":\"Financial District\",\"cuisine\":[\"Italian\"],\"priceRange\":2,\"rating\":4.65587,\"slots\":[{\"time\":\"2026-04-24 18:00:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/18:00:00/2/Dining Room\"},{\"time\":\"2026-04-24 18:15:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/18:15:00/2/Dining Room\"},{\"time\":\"2026-04-24 18:30:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/18:30:00/2/Dining Room\"},{\"time\":\"2026-04-24 18:45:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/18:45:00/2/Dining Room\"},{\"time\":\"2026-04-24 19:00:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/19:00:00/2/Dining Room\"},{\"time\":\"2026-04-24 19:15:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/19:15:00/2/Dining Room\"},{\"time\":\"2026-04-24 19:30:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/19:30:00/2/Dining Room\"},{\"time\":\"2026-04-24 19:45:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/19:45:00/2/Dining Room\"},{\"time\":\"2026-04-24 20:00:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/20:00:00/2/Dining Room\"},{\"time\":\"2026-04-24 20:15:00\",\"type\":\"Dining Room\",\"token\":\"rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/20:15:00/2/Dining Room\"}],\"slotCount\":15},{\"id\":68064,\"name\":\"Laissez Faire\",\"url\":\"https://resy.com/cities/new-york-ny/laissez-faire-ny\",\"neighborhood\":\"Financial District\",\"cuisine\":[\"American\"],\"priceRange\":2,\"rating\":4.06111,\"slots\":[{\"time\":\"2026-04-24 20:00:00\",\"type\":\"Lounge\",\"token\":\"rgs://resy/68064/2303006/2/2026-04-24/2026-04-24/20:00:00/2/Dining Room\"},{\"time\":\"2026-04-24 20:15:00\",\"type\":\"Lounge\",\"token\":\"rgs://resy/68064/2303006/2/2026-04-24/2026-04-24/20:15:00/2/Dining Room\"},{\"time\":\"2026-04-24 20:30:00\",\"type\":\"Lounge\",\"token\":\"rgs://resy/68064/2303006/2/2026-04-24/2026-04-24/20:30:00/2/Dining Room\"},{\"time\":\"2026-04-24 20:45:00\",\"type\":\"Lounge\",\"token\":\"rgs://resy/68064/2303006/2/2026-04-24/2026-04-24/20:45:00/2/Dining Room\"},{\"time\":\"2026-04-24 21:00:00\",\"type\":\"Lounge\",\"token\":\"rgs://resy/68064/2303006/2/2026-04-24/2026-04-24/21:00:00/2/Dining Room\"}],\"slotCount\":5}]"
+    }
+  ],
+  "structuredContent": {
+    "result": [
+      {
+        "id": 60029,
+        "name": "Le Gratin",
+        "url": "https://resy.com/cities/new-york-ny/le-gratin",
+        "neighborhood": "Lower Manhattan",
+        "cuisine": [
+          "French"
+        ],
+        "priceRange": 2,
+        "rating": 4.63489,
+        "slots": [
+          {
+            "time": "2026-04-24 20:45:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/20:45:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 21:00:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:00:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 21:15:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:15:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 21:30:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:30:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 21:45:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/21:45:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 22:00:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/22:00:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 22:15:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/60029/1677974/2/2026-04-24/2026-04-24/22:15:00/2/Dining Room"
+          }
+        ],
+        "slotCount": 7
+      },
+      {
+        "id": 40703,
+        "name": "The Bar Room at The Beekman",
+        "url": "https://resy.com/cities/new-york-ny/the-bar-room-at-the-beekman",
+        "neighborhood": "Financial District",
+        "cuisine": [
+          "American"
+        ],
+        "priceRange": 2,
+        "rating": 4.45618,
+        "slots": [
+          {
+            "time": "2026-04-24 22:30:00",
+            "type": "The Bar Room",
+            "token": "rgs://resy/40703/1484236/2/2026-04-24/2026-04-24/22:30:00/2/The Bar Room"
+          },
+          {
+            "time": "2026-04-24 22:45:00",
+            "type": "The Bar Room",
+            "token": "rgs://resy/40703/1484236/2/2026-04-24/2026-04-24/22:45:00/2/The Bar Room"
+          },
+          {
+            "time": "2026-04-24 23:00:00",
+            "type": "The Bar Room",
+            "token": "rgs://resy/40703/1484236/2/2026-04-24/2026-04-24/23:00:00/2/The Bar Room"
+          },
+          {
+            "time": "2026-04-24 23:15:00",
+            "type": "The Bar Room",
+            "token": "rgs://resy/40703/1484236/2/2026-04-24/2026-04-24/23:15:00/2/The Bar Room"
+          },
+          {
+            "time": "2026-04-24 23:30:00",
+            "type": "The Bar Room",
+            "token": "rgs://resy/40703/1484236/2/2026-04-24/2026-04-24/23:30:00/2/The Bar Room"
+          },
+          {
+            "time": "2026-04-24 23:45:00",
+            "type": "The Bar Room",
+            "token": "rgs://resy/40703/1484236/2/2026-04-24/2026-04-24/23:45:00/2/The Bar Room"
+          }
+        ],
+        "slotCount": 6
+      },
+      {
+        "id": 72993,
+        "name": "Artesano",
+        "url": "https://resy.com/cities/new-york-ny/artesano",
+        "neighborhood": "Tribeca",
+        "cuisine": [
+          "Peruvian"
+        ],
+        "priceRange": 2,
+        "rating": 4.69339,
+        "slots": [
+          {
+            "time": "2026-04-24 20:45:00",
+            "type": "Dining",
+            "token": "rgs://resy/72993/2261622/2/2026-04-24/2026-04-24/20:45:00/2/Dining"
+          },
+          {
+            "time": "2026-04-24 21:00:00",
+            "type": "Dining",
+            "token": "rgs://resy/72993/2261622/2/2026-04-24/2026-04-24/21:00:00/2/Dining"
+          },
+          {
+            "time": "2026-04-24 21:15:00",
+            "type": "Dining",
+            "token": "rgs://resy/72993/2261622/2/2026-04-24/2026-04-24/21:15:00/2/Dining"
+          },
+          {
+            "time": "2026-04-24 21:30:00",
+            "type": "Dining",
+            "token": "rgs://resy/72993/2261622/2/2026-04-24/2026-04-24/21:30:00/2/Dining"
+          },
+          {
+            "time": "2026-04-24 21:45:00",
+            "type": "Dining",
+            "token": "rgs://resy/72993/2261622/2/2026-04-24/2026-04-24/21:45:00/2/Dining"
+          },
+          {
+            "time": "2026-04-24 22:00:00",
+            "type": "Dining",
+            "token": "rgs://resy/72993/2261622/2/2026-04-24/2026-04-24/22:00:00/2/Dining"
+          }
+        ],
+        "slotCount": 6
+      },
+      {
+        "id": 83704,
+        "name": "Da Claudio",
+        "url": "https://resy.com/cities/new-york-ny/da-claudio-ny",
+        "neighborhood": "Financial District",
+        "cuisine": [
+          "Italian"
+        ],
+        "priceRange": 2,
+        "rating": 4.65587,
+        "slots": [
+          {
+            "time": "2026-04-24 18:00:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/18:00:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 18:15:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/18:15:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 18:30:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/18:30:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 18:45:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/18:45:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 19:00:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/19:00:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 19:15:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/19:15:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 19:30:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/19:30:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 19:45:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/19:45:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 20:00:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/20:00:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 20:15:00",
+            "type": "Dining Room",
+            "token": "rgs://resy/83704/3559914/2/2026-04-24/2026-04-24/20:15:00/2/Dining Room"
+          }
+        ],
+        "slotCount": 15
+      },
+      {
+        "id": 68064,
+        "name": "Laissez Faire",
+        "url": "https://resy.com/cities/new-york-ny/laissez-faire-ny",
+        "neighborhood": "Financial District",
+        "cuisine": [
+          "American"
+        ],
+        "priceRange": 2,
+        "rating": 4.06111,
+        "slots": [
+          {
+            "time": "2026-04-24 20:00:00",
+            "type": "Lounge",
+            "token": "rgs://resy/68064/2303006/2/2026-04-24/2026-04-24/20:00:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 20:15:00",
+            "type": "Lounge",
+            "token": "rgs://resy/68064/2303006/2/2026-04-24/2026-04-24/20:15:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 20:30:00",
+            "type": "Lounge",
+            "token": "rgs://resy/68064/2303006/2/2026-04-24/2026-04-24/20:30:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 20:45:00",
+            "type": "Lounge",
+            "token": "rgs://resy/68064/2303006/2/2026-04-24/2026-04-24/20:45:00/2/Dining Room"
+          },
+          {
+            "time": "2026-04-24 21:00:00",
+            "type": "Lounge",
+            "token": "rgs://resy/68064/2303006/2/2026-04-24/2026-04-24/21:00:00/2/Dining Room"
+          }
+        ],
+        "slotCount": 5
+      }
+    ]
+  },
+  "isError": false
+}

@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Typecheck-only config. Worker dev runs via `tsx` (handles
+    // workspace TS imports natively); a production build/bundle step
+    // for Railway will be added under tsconfig.build.json when we wire
+    // deployment. We intentionally omit `rootDir` here because the
+    // program now spans `apps/worker` plus the source trees of
+    // `@yeyak/types` and `@yeyak/resy` (TS6059 otherwise).
+    "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022"],
+    "paths": {
+      "@yeyak/types": ["../../packages/types/src/index.ts"],
+      "@yeyak/types/*": ["../../packages/types/src/*"],
+      "@yeyak/resy": ["../../packages/resy/src/index.ts"],
+      "@yeyak/resy/*": ["../../packages/resy/src/*"]
+    }
+  },
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

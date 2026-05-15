@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "fastmcp": {
+      "wrap_result": true
+    }
+  },
+  "content": [
+    {
+      "type": "text",
+      "text": "[{\"restaurant\":\"OPTO\",\"venue_id\":86439,\"date\":\"2026-04-24\",\"time\":\"18:00:00\",\"party_size\":6,\"type\":\"Dining Room\",\"resy_token\":\"FqTgYy3_Gq9uPj_xJHkzypVHIsRY0XFTbjUnzeLMQTYnkCC_OgzSxgi65tZYd31O6u0fzXpF9xiNbBVmy9EYw4b9svb2zppRP|rHTbW|gjg=-fe1309469feffa61ff6a0bccbb1f33a7e401a8fea51a1ca9b57b8bbd\"}]"
+    }
+  ],
+  "structuredContent": {
+    "result": [
+      {
+        "restaurant": "OPTO",
+        "venue_id": 86439,
+        "date": "2026-04-24",
+        "time": "18:00:00",
+        "party_size": 6,
+        "type": "Dining Room",
+        "resy_token": "FqTgYy3_Gq9uPj_xJHkzypVHIsRY0XFTbjUnzeLMQTYnkCC_OgzSxgi65tZYd31O6u0fzXpF9xiNbBVmy9EYw4b9svb2zppRP|rHTbW|gjg=-fe1309469feffa61ff6a0bccbb1f33a7e401a8fea51a1ca9b57b8bbd"
+      }
+    ]
+  },
+  "isError": false
+}

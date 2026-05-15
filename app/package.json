@@ -1,0 +1,33 @@
+{
+  "name": "yeyak",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Yeyak — AI-powered Resy reservation concierge",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "probe": "tsx scripts/apify-probe.ts",
+    "ping:supabase": "tsx scripts/supabase-ping.ts",
+    "probe:resy-login": "tsx scripts/resy-login-probe.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@supabase/supabase-js": "^2.45.0",
+    "@yeyak/resy": "workspace:*",
+    "@yeyak/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
