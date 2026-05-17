@@ -279,8 +279,14 @@ export async function withResySession<T>(
     });
     return await fn(session);
   } finally {
-    if (client) {
-      await client.close().catch((err) => {
+    // Snapshot into a const with an explicit `Client | null` annotation.
+    // The reassignments to `client` happen inside nested async closures
+    // (ensureConnected, reconnect) that strict-mode control flow analysis
+    // can't trace, so without the explicit annotation TS narrows the
+    // outer-scope `client` to `never` here.
+    const c: Client | null = client;
+    if (c) {
+      await c.close().catch((err) => {
         // Connection cleanup failures shouldn't mask the caller's result.
         console.error("[resy-mcp] client.close() failed", err);
       });
