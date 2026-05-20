@@ -279,12 +279,15 @@ export async function withResySession<T>(
     });
     return await fn(session);
   } finally {
-    // Snapshot into a const with an explicit `Client | null` annotation.
     // The reassignments to `client` happen inside nested async closures
     // (ensureConnected, reconnect) that strict-mode control flow analysis
-    // can't trace, so without the explicit annotation TS narrows the
-    // outer-scope `client` to `never` here.
-    const c: Client | null = client;
+    // can't trace, so by the time we reach this finally block TS has
+    // narrowed `client` to `null`. A type annotation alone (`const c:
+    // Client | null = client`) doesn't override that narrowing — TS
+    // still derives `c` from the narrowed source. A type assertion
+    // (`as Client | null`) explicitly widens it back so the `if`
+    // guard can re-narrow to `Client`.
+    const c = client as Client | null;
     if (c) {
       await c.close().catch((err) => {
         // Connection cleanup failures shouldn't mask the caller's result.
