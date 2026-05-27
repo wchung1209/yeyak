@@ -189,7 +189,11 @@ create table if not exists public.reservation_tasks (
   venue_id        text not null,
   restaurant_name text not null,
   restaurant_url  text,
+  -- target_date is the start of the watch window. target_date_end is
+  -- the (inclusive) end. NULL means single-day. The worker iterates
+  -- this range each cron tick and books the first slot that matches.
   target_date     date not null,
+  target_date_end date,
   time_start      time not null,
   time_end        time not null,
   party_size      int  not null check (party_size > 0),
@@ -198,11 +202,21 @@ create table if not exists public.reservation_tasks (
   notify_only     boolean not null default false,
   created_at      timestamptz not null default now(),
   resolved_at     timestamptz,
-  last_checked_at timestamptz
+  last_checked_at timestamptz,
+  constraint reservation_tasks_date_range_check
+    check (target_date_end is null or target_date_end >= target_date)
 );
 
 create index if not exists reservation_tasks_active_idx
   on public.reservation_tasks (status, target_date)
+  where status = 'active';
+
+-- At most one ACTIVE monitor per (user, restaurant). Prevents the
+-- "two overlapping watches both auto-book at 6pm and 7pm" failure
+-- mode. Resolved tasks don't count, so the user can create a new
+-- monitor for the same venue after one books/cancels/expires.
+create unique index if not exists reservation_tasks_one_active_per_venue
+  on public.reservation_tasks (user_id, venue_id)
   where status = 'active';
 
 alter table public.reservation_tasks enable row level security;

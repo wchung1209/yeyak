@@ -14,8 +14,15 @@ export interface ReservationTask {
    * skips those.
    */
   restaurant_url: string | null;
-  /** ISO date `YYYY-MM-DD` */
+  /** ISO date `YYYY-MM-DD` — start of the watch range (inclusive). */
   target_date: string;
+  /**
+   * ISO date `YYYY-MM-DD` — end of the watch range (inclusive).
+   * `null` means single-day (equivalent to `target_date_end = target_date`).
+   * The worker iterates [target_date..target_date_end] each cron tick
+   * and books the first slot that matches.
+   */
+  target_date_end: string | null;
   /** HH:MM:SS */
   time_start: string;
   /** HH:MM:SS */
@@ -32,7 +39,10 @@ export interface CreateTaskInput {
   venue_id: string;
   restaurant_name: string;
   restaurant_url: string;
+  /** Single date or start of the range. */
   target_date: string;
+  /** Optional end of the range (inclusive). Omit for single-day. */
+  target_date_end?: string;
   time_start: string;
   time_end: string;
   party_size: number;

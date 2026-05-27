@@ -40,7 +40,12 @@ const CreateTaskInput = z.object({
   venueId: z.string(),
   restaurantName: z.string(),
   restaurantUrl: z.string().url(),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  dateStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  /** Optional. Omit for a single-day monitor. */
+  dateEnd: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
   timeStart: z.string().regex(/^\d{2}:\d{2}$/),
   timeEnd: z.string().regex(/^\d{2}:\d{2}$/),
   partySize: z.number().int().min(1).max(20),
@@ -134,7 +139,7 @@ export const AGENT_TOOLS: Anthropic.Tool[] = [
   {
     name: "create_reservation_task",
     description:
-      "Create a monitoring task. The sniper worker polls Resy every hour on the hour and AUTO-BOOKS the moment a slot opens inside the user's time window — no further confirmation needed. Use when the user names a venue + date/party for which there's no current availability and asks Yeyak to watch for an opening. The user is notified by email + SMS (per their settings) the moment a booking lands. Window defaults: ±15 minutes around the user's preferred time, unless the user explicitly states a wider/narrower range.",
+      "Create a monitoring task. The sniper worker polls Resy every hour on the hour, iterates every date in the [dateStart..dateEnd] range, and AUTO-BOOKS the first slot that lands inside the user's time window — no further confirmation. The user is notified by email + SMS the moment a booking lands.\n\nDATE RANGE: pass dateStart and optionally dateEnd to monitor a span (e.g., dateStart=2026-05-26, dateEnd=2026-06-02 watches all eight days). Omit dateEnd for single-day. WIDE RANGES ARE ENCOURAGED — one monitor covering a week is much better than seven separate monitors.\n\nTIME WINDOW: timeStart..timeEnd is the hours inside each date the user is willing to accept. For 'dinner' default to 18:00–21:00 unless the user has tighter constraints. For 'any time' use 11:00–22:00. ±15 min only applies when the user named a specific clock time.\n\nONE MONITOR PER RESTAURANT: the database rejects a second active monitor for the same (user, venue). If you get a 'duplicate_active_monitor' error, the user already has one watching that restaurant — narrate that, show its details via get_bookings, and offer to cancel + recreate with the new window if they want different parameters.",
     input_schema: {
       type: "object",
       properties: {
@@ -144,16 +149,24 @@ export const AGENT_TOOLS: Anthropic.Tool[] = [
           type: "string",
           description: "Full Resy URL — needed by the worker to poll.",
         },
-        date: { type: "string" },
+        dateStart: {
+          type: "string",
+          description: "YYYY-MM-DD — first date in the watch range (inclusive).",
+        },
+        dateEnd: {
+          type: "string",
+          description:
+            "YYYY-MM-DD — last date in the watch range (inclusive). Omit for single-day monitoring.",
+        },
         timeStart: {
           type: "string",
           description:
-            "HH:MM lower bound of the booking window (24h). Default to user's preferred time minus 15 minutes.",
+            "HH:MM lower bound of the booking window inside each date (24h).",
         },
         timeEnd: {
           type: "string",
           description:
-            "HH:MM upper bound of the booking window (24h). Default to user's preferred time plus 15 minutes.",
+            "HH:MM upper bound of the booking window inside each date (24h).",
         },
         partySize: { type: "integer", minimum: 1, maximum: 20 },
       },
@@ -161,7 +174,7 @@ export const AGENT_TOOLS: Anthropic.Tool[] = [
         "venueId",
         "restaurantName",
         "restaurantUrl",
-        "date",
+        "dateStart",
         "timeStart",
         "timeEnd",
         "partySize",
@@ -320,6 +333,13 @@ export async function executeTool(
     case "create_reservation_task": {
       if (!ctx.resyAuthenticated) return RESY_REQUIRED;
       const input = CreateTaskInput.parse(rawInput);
+      if (input.dateEnd && input.dateEnd < input.dateStart) {
+        return {
+          error: "invalid_date_range",
+          message:
+            "dateEnd must be on or after dateStart. If you meant a single-day monitor, omit dateEnd.",
+        };
+      }
       // notify_only is intentionally hardcoded false: monitors always
       // auto-book per product spec. The DB column stays for backward
       // compat with old rows; the worker still honors it on those.
@@ -330,7 +350,8 @@ export async function executeTool(
           venue_id: input.venueId,
           restaurant_name: input.restaurantName,
           restaurant_url: input.restaurantUrl,
-          target_date: input.date,
+          target_date: input.dateStart,
+          target_date_end: input.dateEnd ?? null,
           time_start: input.timeStart,
           time_end: input.timeEnd,
           party_size: input.partySize,
@@ -338,11 +359,37 @@ export async function executeTool(
         })
         .select()
         .single();
-      if (error) throw new Error(`Could not create task: ${error.message}`);
+      if (error) {
+        // The partial unique index on (user_id, venue_id) WHERE status =
+        // 'active' raises 23505 on conflict. Don't surface the raw
+        // Postgres error to the LLM — give it a structured hint it can
+        // act on (cancel + recreate, or update the existing window).
+        if (error.code === "23505") {
+          const { data: existing } = await ctx.supabase
+            .from("reservation_tasks")
+            .select(
+              "id, restaurant_name, target_date, target_date_end, time_start, time_end, party_size",
+            )
+            .eq("user_id", ctx.userId)
+            .eq("venue_id", input.venueId)
+            .eq("status", "active")
+            .single();
+          return {
+            error: "duplicate_active_monitor",
+            message:
+              "An active monitor for this restaurant already exists. Yeyak allows at most one active monitor per restaurant per user. Surface the existing one to the user and ask whether they want to cancel + recreate it with the new window, or keep the existing one.",
+            existing,
+          };
+        }
+        throw new Error(`Could not create task: ${error.message}`);
+      }
+      const rangeLabel = input.dateEnd
+        ? `${input.dateStart}–${input.dateEnd}`
+        : input.dateStart;
       await ctx.supabase.from("activity_log").insert({
         user_id: ctx.userId,
         event_type: "task_created",
-        description: `Monitoring ${input.restaurantName} on ${input.date}`,
+        description: `Monitoring ${input.restaurantName} on ${rangeLabel}`,
         metadata: input,
       });
       return { taskId: data.id, status: "active" as const };

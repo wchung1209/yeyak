@@ -43,18 +43,23 @@ export async function runSniperCycle({
 }: RunSniperCycleArgs): Promise<void> {
   const today = new Date().toISOString().slice(0, 10);
 
-  // Mark expired tasks up-front so we never bill on them.
+  // Mark expired tasks up-front so we never bill on them. A task is
+  // expired when its LATEST date (target_date_end if set, else
+  // target_date) is in the past — a range that starts in the past but
+  // ends in the future is still actionable, we just skip the past dates.
   await supabase
     .from("reservation_tasks")
     .update({ status: "expired", resolved_at: new Date().toISOString() })
     .eq("status", "active")
-    .lt("target_date", today);
+    .or(`target_date_end.lt.${today},and(target_date_end.is.null,target_date.lt.${today})`);
 
+  // Fetch all currently-active tasks. We filter the polled date list
+  // per-task below so a range starting yesterday but ending next week
+  // still gets polled (just skipping yesterday).
   const { data: tasks, error } = await supabase
     .from("reservation_tasks")
     .select("*")
-    .eq("status", "active")
-    .gte("target_date", today);
+    .eq("status", "active");
   if (error) {
     console.error("[sniper] could not fetch tasks", error);
     return;
@@ -90,6 +95,17 @@ async function handleTask(
     return;
   }
 
+  const today = new Date().toISOString().slice(0, 10);
+  const datesToCheck = buildDateRange(
+    task.target_date < today ? today : task.target_date,
+    task.target_date_end ?? task.target_date,
+  );
+  if (datesToCheck.length === 0) {
+    // Range is entirely in the past (the cycle-level expiry sweep
+    // should already have flipped this; defensive no-op).
+    return;
+  }
+
   const profile = await loadProfile(supabase, task.user_id);
   const credentials = await fetchResyCredentials(supabase, task.user_id);
 
@@ -101,99 +117,132 @@ async function handleTask(
     sessionId: "sniper",
   };
 
-  // One MCP session per task. Authenticated only if we have creds —
-  // an unauthenticated session can still poll availability, just can't book.
+  // One MCP session per task, reused across every date in the range.
+  // Authenticated only if we have creds — unauth can poll availability
+  // but can't book.
   await withResySession(config, credentials, async (resy) => {
-    const venue = await resy.checkAvailability(
-      {
-        restaurantUrl: task.restaurant_url!,
-        date: task.target_date,
-        partySize: task.party_size,
-      },
-      { venueId: task.venue_id, restaurantName: task.restaurant_name },
-    );
-
-    await supabase
-      .from("reservation_tasks")
-      .update({ last_checked_at: new Date().toISOString() })
-      .eq("id", task.id);
-
     const windowStart = task.time_start.slice(0, 5);
     const windowEnd = task.time_end.slice(0, 5);
-    const match = venue.slots.find(
-      (slot) => slot.time >= windowStart && slot.time <= windowEnd,
-    );
-    if (!match) return;
 
-    // Notify-only mode: email the user, skip booking.
-    if (task.notify_only) {
+    for (const date of datesToCheck) {
+      const venue = await resy.checkAvailability(
+        {
+          restaurantUrl: task.restaurant_url!,
+          date,
+          partySize: task.party_size,
+        },
+        { venueId: task.venue_id, restaurantName: task.restaurant_name },
+      );
+
+      const match = venue.slots.find(
+        (slot) => slot.time >= windowStart && slot.time <= windowEnd,
+      );
+      if (!match) continue;
+
+      // Notify-only mode (legacy rows only — new tasks always auto-book).
+      if (task.notify_only) {
+        if (profile?.notify_email && profile.email) {
+          await sendEmail({
+            to: profile.email,
+            subject: `A slot opened at ${task.restaurant_name}`,
+            html:
+              `<p>A table opened up at <strong>${task.restaurant_name}</strong> ` +
+              `on ${date} at ${match.time}.</p>` +
+              `<p>Open Yeyak to book it before it's gone.</p>`,
+          });
+        }
+        await markLastChecked(supabase, task.id);
+        return;
+      }
+
+      if (!credentials) {
+        console.warn(
+          `[sniper] task ${task.id} has auto-book on but user has no Resy creds; skipping`,
+        );
+        await markLastChecked(supabase, task.id);
+        return;
+      }
+
+      // First match wins. Book it, update DB, notify, exit the loop.
+      const booking = await resy.book(match.configToken, {
+        venueId: task.venue_id,
+        restaurantName: task.restaurant_name,
+      });
+
+      await supabase.from("reservations").insert({
+        user_id: task.user_id,
+        task_id: task.id,
+        platform: "resy",
+        platform_id: booking.resyToken,
+        restaurant_name: task.restaurant_name,
+        venue_id: task.venue_id,
+        date,
+        time: `${match.time}:00`,
+        party_size: task.party_size,
+        booked_by: "sniper",
+        raw_data: booking.raw,
+      });
+
+      await supabase
+        .from("reservation_tasks")
+        .update({
+          status: "booked",
+          resolved_at: new Date().toISOString(),
+          last_checked_at: new Date().toISOString(),
+        })
+        .eq("id", task.id);
+
+      await supabase.from("activity_log").insert({
+        user_id: task.user_id,
+        event_type: "sniper_booked",
+        description: `${task.restaurant_name} · ${date} ${match.time}`,
+        metadata: { task_id: task.id, resy_token: booking.resyToken, date },
+      });
+
+      const summary = `${task.restaurant_name} · ${date} at ${match.time} for ${task.party_size}`;
       if (profile?.notify_email && profile.email) {
         await sendEmail({
           to: profile.email,
-          subject: `A slot opened at ${task.restaurant_name}`,
-          html:
-            `<p>A table opened up at <strong>${task.restaurant_name}</strong> ` +
-            `on ${task.target_date} at ${match.time}.</p>` +
-            `<p>Open Yeyak to book it before it's gone.</p>`,
-        });
+          subject: `Your table at ${task.restaurant_name} is confirmed`,
+          html: `<p>Your reservation is confirmed.</p><p><strong>${summary}</strong></p>`,
+        }).catch((e) => console.error("[sniper] email failed", e));
       }
-      return;
+      if (profile?.notify_sms && profile.phone) {
+        await sendSms({
+          to: profile.phone,
+          body: `Yeyak: Confirmed — ${summary}.`,
+        }).catch((e) => console.error("[sniper] sms failed", e));
+      }
+      return; // First match in the range books; no further dates checked.
     }
 
-    // Auto-book mode: requires authenticated session.
-    if (!credentials) {
-      console.warn(
-        `[sniper] task ${task.id} has auto-book on but user has no Resy creds; skipping`,
-      );
-      return;
-    }
-
-    const booking = await resy.book(match.configToken, {
-      venueId: task.venue_id,
-      restaurantName: task.restaurant_name,
-    });
-
-    await supabase.from("reservations").insert({
-      user_id: task.user_id,
-      task_id: task.id,
-      platform: "resy",
-      platform_id: booking.resyToken,
-      restaurant_name: task.restaurant_name,
-      venue_id: task.venue_id,
-      date: task.target_date,
-      time: `${match.time}:00`,
-      party_size: task.party_size,
-      booked_by: "sniper",
-      raw_data: booking.raw,
-    });
-
-    await supabase
-      .from("reservation_tasks")
-      .update({ status: "booked", resolved_at: new Date().toISOString() })
-      .eq("id", task.id);
-
-    await supabase.from("activity_log").insert({
-      user_id: task.user_id,
-      event_type: "sniper_booked",
-      description: `${task.restaurant_name} · ${task.target_date} ${match.time}`,
-      metadata: { task_id: task.id, resy_token: booking.resyToken },
-    });
-
-    const summary = `${task.restaurant_name} · ${task.target_date} at ${match.time} for ${task.party_size}`;
-    if (profile?.notify_email && profile.email) {
-      await sendEmail({
-        to: profile.email,
-        subject: `Your table at ${task.restaurant_name} is confirmed`,
-        html: `<p>Your reservation is confirmed.</p><p><strong>${summary}</strong></p>`,
-      }).catch((e) => console.error("[sniper] email failed", e));
-    }
-    if (profile?.notify_sms && profile.phone) {
-      await sendSms({
-        to: profile.phone,
-        body: `Yeyak: Confirmed — ${summary}.`,
-      }).catch((e) => console.error("[sniper] sms failed", e));
-    }
+    // No date in the range had a matching slot this tick.
+    await markLastChecked(supabase, task.id);
   });
+}
+
+/** Inclusive list of ISO dates from `start` to `end`. */
+function buildDateRange(start: string, end: string): string[] {
+  const dates: string[] = [];
+  const startMs = Date.parse(`${start}T00:00:00Z`);
+  const endMs = Date.parse(`${end}T00:00:00Z`);
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs < startMs) {
+    return [];
+  }
+  for (let t = startMs; t <= endMs; t += 24 * 60 * 60 * 1000) {
+    dates.push(new Date(t).toISOString().slice(0, 10));
+  }
+  return dates;
+}
+
+async function markLastChecked(
+  supabase: SupabaseClient,
+  taskId: string,
+): Promise<void> {
+  await supabase
+    .from("reservation_tasks")
+    .update({ last_checked_at: new Date().toISOString() })
+    .eq("id", taskId);
 }
 
 async function loadProfile(
