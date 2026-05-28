@@ -14,8 +14,11 @@ const serverSchema = publicSchema.extend({
   ANTHROPIC_API_KEY: z.string().min(1),
   APIFY_API_TOKEN: z.string().min(1),
   APIFY_RESY_ACTOR_ID: z.string().default("clearpath/resy-booker"),
-  RESEND_API_KEY: z.string().min(1),
-  RESEND_FROM_EMAIL: z.string().email(),
+  // Resend onboarding (task #45) is deferred; keep these optional so the
+  // build doesn't fail on Vercel until we wire real keys. When wiring
+  // Resend later, decide whether to tighten back to required.
+  RESEND_API_KEY: z.string().min(1).optional(),
+  RESEND_FROM_EMAIL: z.string().email().optional(),
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_FROM_NUMBER: z.string().optional(),
