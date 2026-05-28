@@ -1,10 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
+// useSearchParams() causes Next.js to bail out of static rendering. In
+// Next 14 the consumer of that hook MUST sit inside a <Suspense>
+// boundary or `next build` errors with "missing-suspense-with-csr-bailout".
+// We split the form into its own component and wrap it below.
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFormFallback />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginFormFallback() {
+  return (
+    <div className="space-y-4">
+      <p className="text-center text-sm text-muted">Welcome back. Sign in to continue.</p>
+      <div className="h-10 w-full rounded-md border border-ink/10 bg-white" />
+      <div className="h-10 w-full rounded-md border border-ink/10 bg-white" />
+      <div className="h-10 w-full rounded-md bg-ink/60" />
+    </div>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const nextPath = params.get("next") ?? "/";
