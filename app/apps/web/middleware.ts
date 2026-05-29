@@ -2,13 +2,23 @@
  * Next.js middleware — refreshes the Supabase session cookie on every
  * request and routes unauthenticated users to /login.
  *
- * Public routes: /login, /invite/:token, /api/invite/accept
+ * Public routes (the auth flows): /login, /invite/:token, /request-access,
+ * /forgot-password, /reset-password, /api/invite/accept,
+ * /api/access-requests.
  * Everything else requires a signed-in session.
  */
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
-const PUBLIC_PATHS = ["/login", "/invite", "/api/invite/accept"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/invite",
+  "/request-access",
+  "/forgot-password",
+  "/reset-password",
+  "/api/invite/accept",
+  "/api/access-requests",
+];
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 

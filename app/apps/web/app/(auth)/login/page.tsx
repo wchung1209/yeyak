@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -80,8 +81,16 @@ function LoginForm() {
       >
         {loading ? "Signing in…" : "Sign in"}
       </button>
-      <p className="pt-2 text-center text-xs text-muted">
-        Yeyak is invite-only. Contact an admin for access.
+      <div className="pt-2 text-center text-xs text-muted">
+        <Link href="/forgot-password" className="underline hover:text-brass">
+          Forgot password?
+        </Link>
+      </div>
+      <p className="pt-1 text-center text-xs text-muted">
+        Don't have an account?{" "}
+        <Link href="/request-access" className="underline hover:text-brass">
+          Request access
+        </Link>
       </p>
     </form>
   );
