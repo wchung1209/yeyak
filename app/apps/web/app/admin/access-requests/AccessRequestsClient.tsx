@@ -165,86 +165,94 @@ export default function AccessRequestsClient() {
         </p>
       ) : (
         <ul className="divide-y divide-ink/5">
-          {visibleRequests.map((req) => (
-            <li key={req.id} className="py-4">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="font-medium text-ink">
-                    {req.first_name} {req.last_name}
-                    {req.display_name && (
-                      <span className="ml-2 text-sm text-muted">
-                        ({req.display_name})
-                      </span>
-                    )}
-                  </p>
-                  <p className="break-all text-sm text-muted">{req.email}</p>
-                  <p className="mt-1 text-xs text-muted">
-                    Requested {formatDate(req.created_at)}
-                    {req.decided_at && req.status !== "pending" && (
+          {visibleRequests.map((req) => {
+            // Hoist the invite URL into a local const so TS can narrow it
+            // through the conditional render and the button's onClick
+            // closure. Indexed-access on a Record<string, string> widens
+            // back to `string | undefined` across the closure boundary
+            // unless we hold the narrowed value in a local.
+            const inviteUrl = inviteUrls[req.id];
+            return (
+              <li key={req.id} className="py-4">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="font-medium text-ink">
+                      {req.first_name} {req.last_name}
+                      {req.display_name && (
+                        <span className="ml-2 text-sm text-muted">
+                          ({req.display_name})
+                        </span>
+                      )}
+                    </p>
+                    <p className="break-all text-sm text-muted">{req.email}</p>
+                    <p className="mt-1 text-xs text-muted">
+                      Requested {formatDate(req.created_at)}
+                      {req.decided_at && req.status !== "pending" && (
+                        <>
+                          {" · "}
+                          {req.status === "approved" ? "Approved" : "Rejected"}{" "}
+                          {formatDate(req.decided_at)}
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    {req.status === "pending" && (
                       <>
-                        {" · "}
-                        {req.status === "approved" ? "Approved" : "Rejected"}{" "}
-                        {formatDate(req.decided_at)}
+                        <button
+                          type="button"
+                          onClick={() => handleApprove(req)}
+                          disabled={actionId === req.id}
+                          className="rounded-md bg-ink px-3 py-1.5 text-sm text-cream transition hover:bg-ink/90 disabled:opacity-60"
+                        >
+                          {actionId === req.id ? "…" : "Approve"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleReject(req)}
+                          disabled={actionId === req.id}
+                          className="rounded-md border border-ink/20 px-3 py-1.5 text-sm text-ink transition hover:bg-ink/5 disabled:opacity-60"
+                        >
+                          Reject
+                        </button>
                       </>
                     )}
-                  </p>
-                </div>
-                <div className="flex shrink-0 gap-2">
-                  {req.status === "pending" && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => handleApprove(req)}
-                        disabled={actionId === req.id}
-                        className="rounded-md bg-ink px-3 py-1.5 text-sm text-cream transition hover:bg-ink/90 disabled:opacity-60"
+                    {req.status !== "pending" && (
+                      <span
+                        className={`rounded-md px-2 py-1 text-xs uppercase tracking-wide ${
+                          req.status === "approved"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-ink/5 text-muted"
+                        }`}
                       >
-                        {actionId === req.id ? "…" : "Approve"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleReject(req)}
-                        disabled={actionId === req.id}
-                        className="rounded-md border border-ink/20 px-3 py-1.5 text-sm text-ink transition hover:bg-ink/5 disabled:opacity-60"
-                      >
-                        Reject
-                      </button>
-                    </>
-                  )}
-                  {req.status !== "pending" && (
-                    <span
-                      className={`rounded-md px-2 py-1 text-xs uppercase tracking-wide ${
-                        req.status === "approved"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-ink/5 text-muted"
-                      }`}
-                    >
-                      {req.status}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {inviteUrls[req.id] && (
-                <div className="mt-3 rounded-md border border-ink/10 bg-cream/40 p-3">
-                  <p className="mb-1 text-xs text-muted">
-                    Invite URL — share with the user manually:
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 break-all rounded bg-white px-2 py-1 text-xs text-ink">
-                      {inviteUrls[req.id]}
-                    </code>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(req.id, inviteUrls[req.id])}
-                      className="rounded-md border border-ink/20 px-3 py-1 text-xs text-ink transition hover:bg-ink/5"
-                    >
-                      {copiedId === req.id ? "Copied" : "Copy"}
-                    </button>
+                        {req.status}
+                      </span>
+                    )}
                   </div>
                 </div>
-              )}
-            </li>
-          ))}
+
+                {inviteUrl && (
+                  <div className="mt-3 rounded-md border border-ink/10 bg-cream/40 p-3">
+                    <p className="mb-1 text-xs text-muted">
+                      Invite URL — share with the user manually:
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 break-all rounded bg-white px-2 py-1 text-xs text-ink">
+                        {inviteUrl}
+                      </code>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(req.id, inviteUrl)}
+                        className="rounded-md border border-ink/20 px-3 py-1 text-xs text-ink transition hover:bg-ink/5"
+                      >
+                        {copiedId === req.id ? "Copied" : "Copy"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
