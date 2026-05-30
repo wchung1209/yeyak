@@ -71,6 +71,115 @@ import { unwrapStructured } from "./unwrap";
 
 export const RESY_MCP_URL = "https://clearpath--resy-booker.apify.actor/mcp";
 
+/**
+ * Apify actor identifier used for run-management API calls (abort).
+ * Different from RESY_MCP_URL: the Standby endpoint uses double-dash
+ * (`clearpath--resy-booker.apify.actor`) while the run-management API
+ * uses tilde (`clearpath~resy-booker`).
+ *
+ * We hard-code this rather than parsing config.mcpUrl because tests or
+ * self-hosting may point mcpUrl elsewhere; the abort API call still
+ * targets the prod actor by design.
+ */
+const APIFY_RESY_ACTOR_ID = "clearpath~resy-booker";
+
+/** Timeout for the abort REST call. Best-effort cleanup — don't hold the response. */
+const APIFY_ABORT_TIMEOUT_MS = 3_000;
+
+/**
+ * Best-effort: POST Apify's "abort last run" endpoint for the
+ * clearpath/resy-booker actor scoped to the caller's token. Returns
+ * silently on any failure — Apify's own idle-shutdown (if any) and
+ * the next session's abort form a safety net. Compute-time billing
+ * stops once the actor is aborted.
+ */
+async function abortStandbyActor(apifyToken: string): Promise<void> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), APIFY_ABORT_TIMEOUT_MS);
+  try {
+    const res = await fetch(
+      `https://api.apify.com/v2/acts/${APIFY_RESY_ACTOR_ID}/runs/last/abort`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apifyToken}` },
+        signal: controller.signal,
+      },
+    );
+    if (!res.ok && res.status !== 404) {
+      console.warn(
+        `[resy-mcp] actor abort returned HTTP ${res.status}; will retry on next session`,
+      );
+    }
+  } catch (err) {
+    console.warn(`[resy-mcp] actor abort failed: ${describe(err)}`);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Module-level keepalive coordination. Shared across all withResySession
+ * calls in the same process so concurrent sessions don't abort each
+ * other's actor and back-to-back sessions reuse a warm actor.
+ *
+ * Keyed by Apify token (effectively per-Yeyak-account). Each entry
+ * tracks the number of currently-open sessions (refcount) and any
+ * pending abort timer.
+ *
+ * Caveat: serverless runtimes (Vercel, Lambda) may freeze the process
+ * after the HTTP response, in which case the pending setTimeout never
+ * fires. The actor remains warm until either (a) the next session
+ * opens and triggers an abort on close, or (b) Apify's idle shutdown
+ * (if any) kicks in. Worst case is identical to today's behaviour, so
+ * the keepalive is safe to layer on without a Redis dependency.
+ */
+interface KeepaliveEntry {
+  /** How many withResySession callers currently hold this actor open. */
+  activeCount: number;
+  /** Pending abort timer (null when none scheduled). */
+  pendingAbort: ReturnType<typeof setTimeout> | null;
+}
+
+const keepaliveByToken = new Map<string, KeepaliveEntry>();
+
+function onSessionOpen(apifyToken: string): void {
+  let entry = keepaliveByToken.get(apifyToken);
+  if (!entry) {
+    entry = { activeCount: 0, pendingAbort: null };
+    keepaliveByToken.set(apifyToken, entry);
+  }
+  if (entry.pendingAbort) {
+    clearTimeout(entry.pendingAbort);
+    entry.pendingAbort = null;
+  }
+  entry.activeCount += 1;
+}
+
+function onSessionClose(apifyToken: string, keepaliveMs: number): void {
+  const entry = keepaliveByToken.get(apifyToken);
+  if (!entry) return;
+  entry.activeCount = Math.max(0, entry.activeCount - 1);
+  if (entry.activeCount > 0) {
+    // Another session still holds this actor; do not schedule abort.
+    return;
+  }
+  if (keepaliveMs <= 0) {
+    keepaliveByToken.delete(apifyToken);
+    void abortStandbyActor(apifyToken);
+    return;
+  }
+  entry.pendingAbort = setTimeout(() => {
+    keepaliveByToken.delete(apifyToken);
+    void abortStandbyActor(apifyToken);
+  }, keepaliveMs);
+  // Allow the Node process to exit even if this timer is still queued.
+  // Critical for the worker — without unref(), a 30s keepalive (if
+  // accidentally set) would block process exit between cron ticks.
+  if (typeof entry.pendingAbort.unref === "function") {
+    entry.pendingAbort.unref();
+  }
+}
+
 export interface ResyMcpConfig {
   /** Apify API token; Bearer-authed to the Standby MCP endpoint. */
   apifyToken: string;
@@ -84,6 +193,19 @@ export interface ResyMcpConfig {
   userId?: string | null;
   /** Chat session id, or "sniper" for worker calls. */
   sessionId?: string;
+  /**
+   * Milliseconds to wait after the last open session closes before
+   * aborting the Apify Standby actor run. Default 0 = abort
+   * immediately. A positive value keeps the actor warm long enough to
+   * absorb the next user turn without paying the cold-start cost, but
+   * trades that against compute time billed while idle. Sniper passes
+   * 0; the chat agent typically passes ~30000.
+   *
+   * Multiple concurrent withResySession calls share a single abort
+   * timer per Apify token (refcounted). A new session opening always
+   * cancels a pending abort.
+   */
+  keepaliveMs?: number;
 }
 
 /**
@@ -177,12 +299,23 @@ export async function withResySession<T>(
   // True once we've logged in on the current `client`. Reset when
   // reconnect() spins up a new connection.
   let loggedIn = false;
+  // True once openClient() has succeeded at least once during this
+  // withResySession invocation. Used to decide whether to call
+  // onSessionClose() in the finally block — narration-only turns that
+  // never spawn an actor must NOT touch the refcount or trigger an
+  // abort, otherwise we'd kill a warm actor that another concurrent
+  // session is still using.
+  let didOpen = false;
 
   /** Raw connect, no retry. Used inside ensureConnected() and reconnect(). */
   async function openClient(): Promise<Client> {
     const transport = new StreamableHTTPClientTransport(url, { requestInit });
     const c = new Client({ name: "yeyak", version: "0.1.0" });
     await c.connect(transport);
+    if (!didOpen) {
+      didOpen = true;
+      onSessionOpen(config.apifyToken);
+    }
     return c;
   }
 
@@ -293,6 +426,13 @@ export async function withResySession<T>(
         // Connection cleanup failures shouldn't mask the caller's result.
         console.error("[resy-mcp] client.close() failed", err);
       });
+    }
+    // Pair onSessionOpen (called inside openClient) with onSessionClose
+    // so the keepalive refcount stays balanced. The abort itself fires
+    // inside onSessionClose when the refcount drops to zero — either
+    // immediately (keepaliveMs <= 0) or after the keepalive window.
+    if (didOpen) {
+      onSessionClose(config.apifyToken, config.keepaliveMs ?? 0);
     }
   }
 }

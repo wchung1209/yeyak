@@ -115,6 +115,11 @@ async function handleTask(
     source: "sniper",
     userId: task.user_id,
     sessionId: "sniper",
+    // Abort the Apify actor as soon as this task completes. Worker
+    // runs hourly; keeping the actor warm between tasks within a
+    // single cron tick is fine (refcount handles concurrent tasks),
+    // but we don't want it billing in the 59 minutes between ticks.
+    keepaliveMs: 0,
   };
 
   // One MCP session per task, reused across every date in the range.

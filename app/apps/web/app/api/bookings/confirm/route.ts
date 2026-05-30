@@ -84,6 +84,10 @@ export async function POST(req: NextRequest) {
         supabase: svc,
         source: "agent",
         userId: user.id,
+        // 30s keepalive: a confirmed booking is often followed by
+        // a "show me my reservations" turn from the agent, so let
+        // the warm actor absorb that without another cold start.
+        keepaliveMs: 30_000,
       },
       credentials,
       async (resy) =>

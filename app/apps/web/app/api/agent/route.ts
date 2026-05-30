@@ -72,6 +72,10 @@ export async function POST(req: NextRequest) {
             source: "agent",
             sessionId: body.sessionId,
             userId: user.id,
+            // Keep the Apify Standby actor warm for 30s after the
+            // agent turn ends so back-to-back user messages don't
+            // each pay a cold start. See packages/resy/mcp-client.ts.
+            keepaliveMs: 30_000,
           },
           credentials,
           async (resy) => {

@@ -51,6 +51,7 @@ export async function DELETE(
           supabase: svc,
           source: "agent",
           userId: user.id,
+          keepaliveMs: 30_000,
         },
         credentials,
         async (resy) => resy.cancel(res.platform_id),
