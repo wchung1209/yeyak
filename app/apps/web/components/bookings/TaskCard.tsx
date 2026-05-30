@@ -6,6 +6,19 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { ReservationTask } from "@yeyak/types";
 
+/**
+ * Format the watch window. Single-day shows "Jun 1"; date-range shows
+ * "Jun 1 – Jun 4" so multi-day monitors render the whole span (was
+ * previously only showing target_date — task #15).
+ */
+function formatWatchWindow(start: string, end: string | null): string {
+  const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+  const startLabel = new Date(`${start}T00:00:00`).toLocaleDateString(undefined, opts);
+  if (!end || end === start) return startLabel;
+  const endLabel = new Date(`${end}T00:00:00`).toLocaleDateString(undefined, opts);
+  return `${startLabel} – ${endLabel}`;
+}
+
 export function TaskCard({ task }: { task: ReservationTask }) {
   const router = useRouter();
   const [cancelling, setCancelling] = useState(false);
@@ -23,7 +36,7 @@ export function TaskCard({ task }: { task: ReservationTask }) {
         <div>
           <h3 className="font-serif text-base">{task.restaurant_name}</h3>
           <p className="text-xs text-muted">
-            {task.target_date} · {task.time_start.slice(0, 5)}–{task.time_end.slice(0, 5)} · Party of {task.party_size}
+            {formatWatchWindow(task.target_date, task.target_date_end)} · {task.time_start.slice(0, 5)}–{task.time_end.slice(0, 5)} · Party of {task.party_size}
           </p>
         </div>
         <Badge tone="info">Watching</Badge>

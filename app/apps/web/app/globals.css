@@ -11,6 +11,12 @@ body {
   background: theme(colors.cream);
   color: theme(colors.ink);
   -webkit-font-smoothing: antialiased;
+  /* Stops iOS rubber-band on the document. Without this, on Chat or
+   * Bookings tabs (short content), pulling down rubber-bands the
+   * <body> and drags the BottomNav with it — even though main has
+   * overflow-y-auto. Per-component scroll containers (.chat-scroll,
+   * <main>) still scroll normally inside. */
+  overscroll-behavior: none;
 }
 
 /* Chat bubble scroll container gets momentum-scroll on iOS */
