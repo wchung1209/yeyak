@@ -3,9 +3,13 @@
  * request and routes unauthenticated users to /login.
  *
  * Public routes (the auth flows): /login, /invite/:token, /request-access,
- * /forgot-password, /reset-password, /api/invite/accept,
- * /api/access-requests.
+ * /forgot-password, /reset-password, /api/invite (GET lookup + POST
+ * accept), /api/access-requests.
  * Everything else requires a signed-in session.
+ *
+ * Note: /api/invite POST has its own admin check inside the handler;
+ * making it middleware-public just lets unauthenticated GETs through
+ * for the invite-accept page to look up the email by token.
  */
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
@@ -16,7 +20,7 @@ const PUBLIC_PATHS = [
   "/request-access",
   "/forgot-password",
   "/reset-password",
-  "/api/invite/accept",
+  "/api/invite",
   "/api/access-requests",
 ];
 
