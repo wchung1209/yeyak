@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function InviteAcceptPage({ params }: { params: { token: string } }) {
-  const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -53,8 +51,17 @@ export default function InviteAcceptPage({ params }: { params: { token: string }
       setError("Could not finalize invite. Please contact an admin.");
       return;
     }
-    router.push("/");
-    router.refresh();
+    // Hard navigation rather than router.push("/"). After auth.signUp,
+    // the browser has new cookies but Next.js's client cache + the RSC
+    // payload that just rendered this page were fetched as anonymous.
+    // router.push() can land on /  with stale auth state, which
+    // intermittently throws a client-side exception until the user
+    // refreshes. window.location.assign forces a fresh page load so
+    // middleware sees the new session cookie on the very first request.
+    // We send new users straight to /onboarding since profile setup
+    // is required next anyway; the redirect chain in (app)/layout
+    // would do the same thing with one extra hop.
+    window.location.assign("/onboarding");
   }
 
   if (!ready) return <p className="text-center text-sm text-muted">Loading…</p>;
