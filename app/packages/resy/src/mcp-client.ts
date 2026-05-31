@@ -83,38 +83,130 @@ export const RESY_MCP_URL = "https://clearpath--resy-booker.apify.actor/mcp";
  */
 const APIFY_RESY_ACTOR_ID = "clearpath~resy-booker";
 
-/** Timeout for the abort REST call. Best-effort cleanup — don't hold the response. */
-const APIFY_ABORT_TIMEOUT_MS = 3_000;
+/** Timeout for any single Apify REST call. Best-effort cleanup — don't hold the response. */
+const APIFY_REST_TIMEOUT_MS = 5_000;
 
-/**
- * Best-effort: POST Apify's "abort last run" endpoint for the
- * clearpath/resy-booker actor scoped to the caller's token. Returns
- * silently on any failure — Apify's own idle-shutdown (if any) and
- * the next session's abort form a safety net. Compute-time billing
- * stops once the actor is aborted.
- */
-async function abortStandbyActor(apifyToken: string): Promise<void> {
+async function apifyFetch(
+  url: string,
+  init: RequestInit,
+): Promise<Response | null> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), APIFY_ABORT_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), APIFY_REST_TIMEOUT_MS);
   try {
-    const res = await fetch(
-      `https://api.apify.com/v2/acts/${APIFY_RESY_ACTOR_ID}/runs/last/abort`,
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apifyToken}` },
-        signal: controller.signal,
-      },
-    );
-    if (!res.ok && res.status !== 404) {
-      console.warn(
-        `[resy-mcp] actor abort returned HTTP ${res.status}; will retry on next session`,
-      );
-    }
+    return await fetch(url, { ...init, signal: controller.signal });
   } catch (err) {
-    console.warn(`[resy-mcp] actor abort failed: ${describe(err)}`);
+    console.warn(`[resy-mcp] apify fetch failed ${url}: ${describe(err)}`);
+    return null;
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * Best-effort: force-abort Apify's "last run" for the resy-booker
+ * actor scoped to the caller's token. Uses `?gracefully=false` to skip
+ * the 30s SIGTERM grace period — without this the actor would keep
+ * billing while it ignores SIGTERM. Returns silently on any failure;
+ * the reaper (reapStaleActorRuns) is the secondary safety net.
+ */
+async function abortStandbyActor(apifyToken: string): Promise<void> {
+  const res = await apifyFetch(
+    `https://api.apify.com/v2/acts/${APIFY_RESY_ACTOR_ID}/runs/last/abort?gracefully=false`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apifyToken}` },
+    },
+  );
+  if (res && !res.ok && res.status !== 404) {
+    console.warn(
+      `[resy-mcp] actor abort returned HTTP ${res.status}; reaper will catch it`,
+    );
+  }
+}
+
+interface ApifyRunSummary {
+  id: string;
+  status: string;
+  startedAt: string;
+}
+
+interface ApifyRunsListResponse {
+  data?: {
+    items?: ApifyRunSummary[];
+  };
+}
+
+/**
+ * Sweep stuck runs. Lists every RUNNING or READY run of the
+ * resy-booker actor for this token and force-aborts any whose
+ * startedAt is older than `maxAgeMs`. Belt-and-suspenders for the
+ * session-close abort: even if a session never closes cleanly (network
+ * partition, function timeout, etc.), the reaper guarantees the actor
+ * doesn't bill indefinitely.
+ *
+ * Intended call site: top of every sniper cron tick. Cheap (one list +
+ * a few aborts), tolerant of failure (logged not raised). Safe to call
+ * even with no stuck runs — it just no-ops.
+ */
+export async function reapStaleActorRuns(
+  apifyToken: string,
+  maxAgeMs: number,
+): Promise<{ inspected: number; aborted: number }> {
+  const listRes = await apifyFetch(
+    // ?status= accepts comma-separated, but Apify's actual filter
+    // semantics are inconsistent across actors; fetch all and filter
+    // client-side. Pagination default is 1000 per page which is
+    // plenty for our scale.
+    `https://api.apify.com/v2/acts/${APIFY_RESY_ACTOR_ID}/runs?desc=true&limit=100`,
+    {
+      method: "GET",
+      headers: { Authorization: `Bearer ${apifyToken}` },
+    },
+  );
+  if (!listRes || !listRes.ok) {
+    console.warn(
+      `[resy-mcp] reaper list returned ${listRes?.status ?? "no response"}`,
+    );
+    return { inspected: 0, aborted: 0 };
+  }
+
+  let body: ApifyRunsListResponse;
+  try {
+    body = (await listRes.json()) as ApifyRunsListResponse;
+  } catch (err) {
+    console.warn(`[resy-mcp] reaper list parse failed: ${describe(err)}`);
+    return { inspected: 0, aborted: 0 };
+  }
+
+  const items = body.data?.items ?? [];
+  const now = Date.now();
+  const stuck = items.filter((run) => {
+    if (run.status !== "RUNNING" && run.status !== "READY") return false;
+    const started = Date.parse(run.startedAt);
+    if (Number.isNaN(started)) return false;
+    return now - started > maxAgeMs;
+  });
+
+  let aborted = 0;
+  for (const run of stuck) {
+    const res = await apifyFetch(
+      `https://api.apify.com/v2/acts/${APIFY_RESY_ACTOR_ID}/runs/${run.id}/abort?gracefully=false`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apifyToken}` },
+      },
+    );
+    if (res?.ok) {
+      aborted += 1;
+      console.log(
+        `[resy-mcp] reaper aborted stuck run ${run.id} (status=${run.status}, age=${
+          now - Date.parse(run.startedAt)
+        }ms)`,
+      );
+    }
+  }
+
+  return { inspected: items.length, aborted };
 }
 
 /**

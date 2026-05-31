@@ -11,6 +11,11 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { findCachedToolResult, type ResySession } from "@yeyak/resy";
+import {
+  countActiveSniperTasks,
+  loadTierLimits,
+  rangeDays,
+} from "@/lib/billing/tier-limits";
 
 // ─── Tool input schemas (runtime-validated with zod) ────────────────
 //
@@ -340,6 +345,33 @@ export async function executeTool(
             "dateEnd must be on or after dateStart. If you meant a single-day monitor, omit dateEnd.",
         };
       }
+
+      // Tier pre-flight — fetch user's caps + current usage so the
+      // agent can surface a friendly message rather than triggering a
+      // raw DB exception. The DB trigger enforce_sniper_tier_limits is
+      // still the authoritative gate.
+      const limits = await loadTierLimits(ctx.supabase, ctx.userId);
+      const activeNow = await countActiveSniperTasks(ctx.supabase, ctx.userId);
+      if (activeNow >= limits.maxActiveSniperTasks) {
+        return {
+          error: "tier_limit_active_tasks",
+          message: `You're at ${activeNow} of ${limits.maxActiveSniperTasks} active monitors on the ${limits.tier} tier. Cancel an existing monitor first, or stay within the limit. Tell the user clearly which limit was reached and offer to list their current monitors so they can pick one to cancel.`,
+          activeNow,
+          maxActiveTasks: limits.maxActiveSniperTasks,
+          tier: limits.tier,
+        };
+      }
+      const requestedDays = rangeDays(input.dateStart, input.dateEnd ?? null);
+      if (requestedDays > limits.maxSniperDateRangeDays) {
+        return {
+          error: "tier_limit_date_range",
+          message: `The ${limits.tier} tier allows up to ${limits.maxSniperDateRangeDays} day(s) per monitor; you asked for ${requestedDays}. Tell the user the limit and offer to set up a single-day monitor for ${input.dateStart} instead (or whichever date in their range they care most about).`,
+          requestedDays,
+          maxDays: limits.maxSniperDateRangeDays,
+          tier: limits.tier,
+        };
+      }
+
       // notify_only is intentionally hardcoded false: monitors always
       // auto-book per product spec. The DB column stays for backward
       // compat with old rows; the worker still honors it on those.

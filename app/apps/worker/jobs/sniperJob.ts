@@ -20,10 +20,19 @@ import type { ReservationTask } from "@yeyak/types";
 import {
   ResyMcpError,
   fetchResyCredentials,
+  reapStaleActorRuns,
   withResySession,
   type ResyMcpConfig,
 } from "@yeyak/resy";
 import { sendEmail, sendSms } from "../lib/notifications.js";
+
+/**
+ * Hard upper bound on how long an Apify actor run is allowed to live
+ * before the reaper force-aborts it. Normal sessions finish in seconds;
+ * anything still running after 5 minutes is stuck and shouldn't be
+ * billing us indefinitely.
+ */
+const STALE_RUN_MAX_AGE_MS = 5 * 60 * 1000;
 
 interface RunSniperCycleArgs {
   supabase: SupabaseClient;
@@ -41,6 +50,22 @@ export async function runSniperCycle({
   supabase,
   apifyToken,
 }: RunSniperCycleArgs): Promise<void> {
+  // Reap any runs left over from previous cycles before we spawn new
+  // ones. Belt-and-suspenders against the session-close abort missing
+  // an actor (network partition, function freeze on Vercel, etc.).
+  // Logs how many were aborted for visibility.
+  try {
+    const result = await reapStaleActorRuns(apifyToken, STALE_RUN_MAX_AGE_MS);
+    if (result.aborted > 0) {
+      console.log(
+        `[sniper] reaper aborted ${result.aborted}/${result.inspected} stale runs`,
+      );
+    }
+  } catch (err) {
+    // Reaper failures must not stop the cycle.
+    console.warn("[sniper] reaper threw, continuing", err);
+  }
+
   const today = new Date().toISOString().slice(0, 10);
 
   // Mark expired tasks up-front so we never bill on them. A task is

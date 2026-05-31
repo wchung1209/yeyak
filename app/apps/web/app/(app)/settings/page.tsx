@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SettingsForm } from "@/components/settings/SettingsForm";
+import {
+  countActiveSniperTasks,
+  loadTierLimits,
+} from "@/lib/billing/tier-limits";
 import type { PublicProfile } from "@yeyak/types";
 
 export const dynamic = "force-dynamic";
@@ -57,6 +61,14 @@ export default async function SettingsPage() {
 
   const isAdmin = safe?.role === "admin";
 
+  // Tier info — surfaced as a read-only summary today. Everyone is on
+  // 'free' until paid-tier billing exists. The numbers come straight
+  // from public.tier_limits so promoting a tier (or tuning a row)
+  // updates the UI without code changes.
+  const tierLimits = user ? await loadTierLimits(supabase, user.id) : null;
+  const activeTaskCount = user ? await countActiveSniperTasks(supabase, user.id) : 0;
+  const tierLabel = tierLimits ? capitalize(tierLimits.tier) : "Free";
+
   return (
     <div className="space-y-6 px-5 pb-10 pt-6">
       <header>
@@ -64,11 +76,51 @@ export default async function SettingsPage() {
         <p className="text-sm text-muted">Profile, Resy connection, and notifications.</p>
       </header>
       {safe && <SettingsForm profile={safe} />}
+      {tierLimits && (
+        <section
+          aria-labelledby="tier-section-heading"
+          className="space-y-3 rounded-lg border border-ink/10 bg-white p-4"
+        >
+          <div className="flex items-baseline justify-between">
+            <h2 id="tier-section-heading" className="font-serif text-lg">
+              Plan
+            </h2>
+            <span className="rounded-full border border-ink/15 px-2 py-0.5 text-xs uppercase tracking-wide text-muted">
+              {tierLabel}
+            </span>
+          </div>
+          <dl className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-muted">
+                Active monitors
+              </dt>
+              <dd className="text-ink">
+                {activeTaskCount} of {tierLimits.maxActiveSniperTasks}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-muted">
+                Max range per monitor
+              </dt>
+              <dd className="text-ink">
+                {tierLimits.maxSniperDateRangeDays}{" "}
+                {tierLimits.maxSniperDateRangeDays === 1 ? "day" : "days"}
+              </dd>
+            </div>
+          </dl>
+          <p className="text-xs text-muted">
+            Higher tiers are coming soon. For now, every Yeyak account is on the
+            free plan.
+          </p>
+        </section>
+      )}
       {isAdmin && (
         <section
           aria-labelledby="admin-section-heading"
           className="space-y-3 rounded-lg border border-ink/10 bg-cream/30 p-4"
         >
+          {/* Admin block lives below Plan so non-admins see Plan as the
+              terminal section. */}
           <div>
             <h2 id="admin-section-heading" className="font-serif text-lg">
               Admin
@@ -101,4 +153,9 @@ export default async function SettingsPage() {
       )}
     </div>
   );
+}
+
+function capitalize(s: string): string {
+  if (!s) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
